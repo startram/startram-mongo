@@ -1,3 +1,5 @@
 deps do
-  # github "[your-github-name]/example"
+  github "dbackeus/activesupport.cr"
+  github "dbackeus/startram"
+  github "datanoise/mongo.cr"
 end
