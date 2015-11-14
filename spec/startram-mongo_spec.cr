@@ -7,7 +7,7 @@ class TestModel
 
   field :name, String
   field :age, Int32
-  field :poked_at, Time, default: -> { Time.at(108) }
+  field :poked_at, Time, default: -> { Time.epoch(108) }
   field :happy, Bool, default: true
 end
 
@@ -28,25 +28,28 @@ describe Startram::Mongo do
   end
 
   describe ".find" do
-    it "instantiates a model form the database" do
+    it "instantiates a model from the database" do
       id = BSON::ObjectId.new
 
       TestModel.collection.insert({
         "_id" => id
         "name" => "James Bond"
         "age" => 37
-        "poked_at" => Time.at(99)
+        "poked_at" => Time.epoch(99)
         "happy" => false
       })
 
       model = TestModel.find(id.to_s)
+      model.name.should eq "James Bond"
+      model.age.should eq 37
+      model.happy.should eq false
 
-      model.attributes.should eq({
-        "name" => "James Bond"
-        "age" => 37
-        "poked_at" => Time.at(99)
-        "happy" => false
-      })
+      # model.attributes.should eq({
+      #   "name" => "James Bond"
+      #   "age" => 37
+      #   "poked_at" => Time.epoch(99)
+      #   "happy" => false
+      # })
     end
 
     it "raises DocumentNotFound error unless found" do
@@ -55,6 +58,26 @@ describe Startram::Mongo do
       end
     end
   end
+
+  # describe ".create" do
+  #   model =
+  #   it "persists the model to the database" do
+  #     model = TestModel.create({"name" => "Awesome", "age" => 23})
+
+  #     model.save
+
+  #     doc = TestModel.collection.find_one({"name" => "Awesome"})
+
+  #     doc.should_not be_nil
+
+  #     if doc
+  #       doc["name"].should eq "Awesome"
+  #       doc["age"]?.should eq 23
+  #       doc["poked_at"]?.should eq Time.epoch(108)
+  #       doc["happy"]?.should eq true
+  #     end
+  #   end
+  # end
 
   describe "#save" do
     it "persists the model to the database" do
@@ -67,11 +90,17 @@ describe Startram::Mongo do
       doc.should_not be_nil
 
       if doc
-        doc["name"].should eq "Awesome"
+        doc["name"]?.should eq "Awesome"
         doc["age"]?.should eq 23
-        doc["poked_at"]?.should eq Time.at(108)
+        # doc["poked_at"]?.should eq Time.epoch(108)
         doc["happy"]?.should eq true
       end
+    end
+
+    it "sets the database id on the model" do
+      model = TestModel.new
+      model.save
+      model.id.should eq "asdf"
     end
   end
 end

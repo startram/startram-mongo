@@ -23,8 +23,19 @@ module Startram
     end
 
     module InstanceMethods
+      macro included
+        field :_id, String, BSON::ObjectId
+      end
+
+      def id
+        _id
+      end
+
       def save
+        attributes["_id"] ||= BSON::ObjectId.new.to_s[0..-2]
         collection.insert(attributes)
+        last_error = collection.last_error
+        puts "last_error: #{last_error}"
       end
 
       private def collection
@@ -57,11 +68,21 @@ module Startram
         end
       end
 
+      def attributes_to_doc(attributes)
+        @@fields.values.inject({} of String => BSON::Field) do |doc, field_data|
+          name = field_data.name
+          if attributes.has_key?(name)
+            value coerce_attribute doc[name]
+            doc[name] = value
+          end
+        end
+      end
+
       private def doc_to_attributes(doc)
         @@fields.values.inject(Startram::Model::Attributes.new) do |attributes, field_data|
           name = field_data.name
           if doc.has_key?(name)
-            value = coerce_bson doc[name]?
+            value = coerce_bson doc[name], field_data
             attributes[name] = value
           end
           attributes
@@ -83,6 +104,14 @@ module Startram
           value as Time
         when Bool
           value as Bool
+        end
+      end
+
+      private def coerce_attribute(value, field_data)
+        if field_data.database_type == BSON::ObjectId
+          BSON::ObjectId.new(value)
+        else
+          value
         end
       end
     end
