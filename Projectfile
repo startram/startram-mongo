@@ -1,5 +1,5 @@
 deps do
-  github "dbackeus/activesupport.cr"
-  github "dbackeus/startram"
+  github "startram/activesupport.cr"
+  github "startram/startram"
   github "datanoise/mongo.cr"
 end
